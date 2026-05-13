@@ -1,25 +1,94 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp"
 import z from "zod"
+import { exec, execFile } from "child_process"
+import { promisify } from "util"
+import path from "path"
+import fs from "fs/promises"
+import { create } from "domain"
+import { text } from "stream/consumers"
+
+const execAsync = promisify(exec)
 
 export function registerCreateProject(server: McpServer) {
     server.registerTool(
-        "testtool", // Titulo de la herramienta
+        "create-project", // Titulo de la herramienta
         {
-            description: "testool", // descripción de la herramienta
-            inputSchema: {
-                city: z.string().describe("Name of the city to fetch weather for"), // Parametro de entrada para la herramienta
-            },
+            description: "Create a new project with Expo", // descripción de la herramienta
+            inputSchema: CreateProjectSchema // Esquema de validación de la entrada de la herramienta
         },
         // Implementación de la herramienta lo que se hace con la información de entrada
-        async ({ city }) => {
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: `The weather in ${city} is jd salcedo sanchez.`
+        async ({ name, output_dir }) => {
+            const baseDir = output_dir ?? "./projects";
+            const projectDir = path.join(baseDir, name);
+
+            try {
+                // Verificar si el proyecto ya existe
+                const exists = await fs.access(projectDir).then(() => true).catch(() => false);
+                if (exists) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Project ${name} already exists in ${baseDir}.`
+                            }
+                        ]
                     }
-                ]
+                }
+                // Crear el proyecto
+                await fs.mkdir(projectDir, { recursive: true });
+                let command = `npx create-expo-app@latest ${name} --template blank`;
+
+                // Ejecutar el comando para crear el proyecto
+                const { stdout, stderr } = await execAsync(command, { cwd: baseDir, timeout: 120_000 });
+
+                const metadata = {
+                    projectName: name,
+                    createAt: new Date().toISOString(),
+                    path: projectDir
+                }
+
+                await fs.writeFile(
+                    path.join(projectDir, ".mcp-project.json"),
+                    JSON.stringify(metadata)
+                );
+
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: [
+                                ` Proyecto "${name}" creado exitosamente!`,
+                                ` Ubicación: ${projectDir}`,
+                                ` Framework: Expo`,
+                                ``,
+                                `Próximos pasos:`,
+                                ` cd ${projectDir}`,
+                                ` npm start`,
+                                ``,
+                                stdout ? `📝 Output:\n${stdout}` : "",
+                            ]
+                                .filter(Boolean)
+                                .join("\n")
+                        }
+                    ]
+                }
+
+            } catch (error) {
+                const errMsg = error instanceof Error ? error.message : String(error);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Error creating project ${name}: ${errMsg}`
+                        }
+                    ]
+                }
             }
         }
     )
+}
+
+const CreateProjectSchema = {
+    name: z.string().min(1).describe("Name of the project to create"),
+    output_dir: z.string().optional().describe("Directory where the project will be created, default ./projects")
 }
