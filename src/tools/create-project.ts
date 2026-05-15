@@ -1,11 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp"
 import z from "zod"
-import { exec, execFile } from "child_process"
+import { exec } from "child_process"
 import { promisify } from "util"
 import path from "path"
 import fs from "fs/promises"
-import { create } from "domain"
-import { text } from "stream/consumers"
 
 const execAsync = promisify(exec)
 
