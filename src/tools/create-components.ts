@@ -73,15 +73,7 @@ export function registerCreateComponent(server: McpServer) {
 }
 
 const CreateComponentSchema = {
-    component_type: z
-        .enum(["button", "input", "text", "card", "badge", "divider", "avatar"])
-        .describe("Type of UI component to generate"),
-    project_name: z
-        .string()
-        .min(1)
-        .describe("Name of the existing project where the component will be created"),
-    output_dir: z
-        .string()
-        .optional()
-        .describe("Base directory where the project lives, default ./projects"),
+    component_type: z.enum(["button", "input", "text", "card", "badge", "divider", "avatar"]).describe("Type of UI component to generate"),
+    project_name: z.string().min(1).describe("Name of the existing project where the component will be created"),
+    output_dir: z.string().optional().describe("Base directory where the project lives, default ./projects"),
 };
