@@ -5,6 +5,7 @@ import { registerCreateComponent } from "./create-components.js";
 import { registerConfigureRouting } from "./config-routing.js";
 import { registerCreateScreen } from "./create-screen.js";
 import { registerCreateLayout } from "./create-layout.js";
+import { registerConfigureStorage } from "./configure-storage.js";
 
 // Aca vamos a ir añadiendo las herramientas que queremos registrar
 export function registerTools(server: McpServer) {
@@ -14,4 +15,5 @@ export function registerTools(server: McpServer) {
     registerConfigureRouting(server);
     registerCreateScreen(server);
     registerCreateLayout(server);
+    registerConfigureStorage(server);
 }
