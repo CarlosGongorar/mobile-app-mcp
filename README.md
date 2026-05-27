@@ -164,7 +164,7 @@ La tool recibe la preferencia del usuario (base de datos en la nube o almacenami
  
 ```
 Opciones soportadas:
-  BaaS  →  Firebase / Supabase
+  BaaS  →  Supabase
   Local  →  AsyncStorage / SQLite (expo-sqlite)
 ```
  
