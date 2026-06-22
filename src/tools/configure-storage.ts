@@ -92,10 +92,6 @@ PROVIDER RULES — read before calling:
                     cwd: projectDir,
                     timeout: 120_000,
                 });
-                await execAsync(`npm install --save-dev @types/react @types/react-native`, {
-                    cwd: projectDir,
-                    timeout: 120_000,
-                });
 
                 // 4. Create folders
                 await fs.mkdir(storageDir, { recursive: true });
@@ -103,11 +99,11 @@ PROVIDER RULES — read before calling:
 
                 // 5. Write config file (injecting real credentials if supabase)
                 const config = storageConfigTemplate(provider as StorageProvider, supabase_url, supabase_publishable_key);
-                await fs.writeFile(path.join(storageDir, "config.ts"), config, "utf-8");
+                await fs.writeFile(path.join(storageDir, "config.js"), config, "utf-8");
 
                 // 6. Write hook
                 await fs.writeFile(
-                    path.join(hooksDir, "useStorage.ts"),
+                    path.join(hooksDir, "useStorage.js"),
                     storageHookTemplate(provider as StorageProvider),
                     "utf-8"
                 );
@@ -140,8 +136,8 @@ PROVIDER RULES — read before calling:
                             `Storage configured for "${project_name}" using ${provider}`,
                             ``,
                             `Files created:`,
-                            `  storage/config.ts    → client / helpers`,
-                            `  hooks/useStorage.ts  → ready-to-use React hook`,
+                            `  storage/config.js    → client / helpers`,
+                            `  hooks/useStorage.js  → ready-to-use React hook`,
                             provider === "supabase" ? `  .env                 → credentials (git-ignored)` : "",
                             ``,
                             `Packages installed: ${deps}`,

@@ -12,7 +12,7 @@ export function storageConfigTemplate(provider: StorageProvider,
     switch (provider) {
         case "supabase":
             return `import 'react-native-url-polyfill/auto';
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 import 'expo-sqlite/localStorage/install';
 
 const SUPABASE_URL = "${supabaseUrl ?? "https://YOUR_PROJECT.supabase.co"}";
@@ -25,22 +25,22 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
         persistSession: true,
         detectSessionInUrl: false,
     },
-})
+});
 `;
 
         case "asyncstorage":
             return `import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export async function storeItem(key: string, value: unknown): Promise<void> {
+export async function storeItem(key, value) {
     await AsyncStorage.setItem(key, JSON.stringify(value));
 }
 
-export async function getItem<T>(key: string): Promise<T | null> {
+export async function getItem(key) {
     const raw = await AsyncStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : null;
+    return raw ? JSON.parse(raw) : null;
 }
 
-export async function removeItem(key: string): Promise<void> {
+export async function removeItem(key) {
     await AsyncStorage.removeItem(key);
 }
 `;
@@ -50,7 +50,7 @@ export async function removeItem(key: string): Promise<void> {
 
 export const db = SQLite.openDatabaseSync("app.db");
 
-export function initDatabase(): void {
+export function initDatabase() {
     db.execSync(\`
         CREATE TABLE IF NOT EXISTS items (
             id    INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,32 +69,32 @@ export function storageHookTemplate(provider: StorageProvider): string {
             return `import { useState, useEffect } from "react";
 import { supabase } from "../storage/config";
 
-export function useSupabase<T extends Record<string, unknown>>(table: string) {
-    const [data,    setData]    = useState<T[]>([]);
+export function useSupabase(table) {
+    const [data,    setData]    = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error,   setError]   = useState<string | null>(null);
+    const [error,   setError]   = useState(null);
 
     async function fetchAll() {
         setLoading(true);
         const { data: rows, error: err } = await supabase.from(table).select("*");
         if (err) setError(err.message);
-        else     setData((rows ?? []) as T[]);
+        else     setData(rows ?? []);
         setLoading(false);
     }
 
-    async function insert(item: T) {
-        const { error: err } = await supabase.from(table).insert(item as never);
+    async function insert(item) {
+        const { error: err } = await supabase.from(table).insert(item);
         if (err) setError(err.message);
         else     await fetchAll();
     }
 
-    async function update(id: number | string, changes: Partial<T>) {
-        const { error: err } = await supabase.from(table).update(changes as never).eq("id", id);
+    async function update(id, changes) {
+        const { error: err } = await supabase.from(table).update(changes).eq("id", id);
         if (err) setError(err.message);
         else     await fetchAll();
     }
 
-    async function remove(id: number | string) {
+    async function remove(id) {
         const { error: err } = await supabase.from(table).delete().eq("id", id);
         if (err) setError(err.message);
         else     await fetchAll();
@@ -110,18 +110,18 @@ export function useSupabase<T extends Record<string, unknown>>(table: string) {
             return `import { useState, useEffect, useCallback } from "react";
 import { storeItem, getItem, removeItem } from "../storage/config";
 
-export function useAsyncStorage<T>(key: string, defaultValue: T) {
-    const [value,   setValue]   = useState<T>(defaultValue);
+export function useAsyncStorage(key, defaultValue) {
+    const [value,   setValue]   = useState(defaultValue);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getItem<T>(key).then(stored => {
+        getItem(key).then(stored => {
             if (stored !== null) setValue(stored);
             setLoading(false);
         });
     }, [key]);
 
-    const save = useCallback(async (newValue: T) => {
+    const save = useCallback(async (newValue) => {
         setValue(newValue);
         await storeItem(key, newValue);
     }, [key]);
@@ -147,22 +147,22 @@ export function useSQLite() {
         setReady(true);
     }, []);
 
-    function set(key: string, value: unknown): void {
+    function set(key, value) {
         db.runSync(
             "INSERT INTO items (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",
             [key, JSON.stringify(value)]
         );
     }
 
-    function get<T>(key: string): T | null {
-        const row = db.getFirstSync<{ value: string }>(
+    function get(key) {
+        const row = db.getFirstSync(
             "SELECT value FROM items WHERE key = ?",
             [key]
         );
-        return row ? (JSON.parse(row.value) as T) : null;
+        return row ? JSON.parse(row.value) : null;
     }
 
-    function remove(key: string): void {
+    function remove(key) {
         db.runSync("DELETE FROM items WHERE key = ?", [key]);
     }
 
