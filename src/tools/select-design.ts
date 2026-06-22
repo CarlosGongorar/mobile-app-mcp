@@ -3,6 +3,7 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { THEMES, StyleKey } from "../templates/themes.js";
+import { updateContext } from "../utils/context.js";
 
 function generateStylesFile(style: StyleKey): string {
     const theme = THEMES[style];
@@ -48,6 +49,7 @@ export function registerSelectDesign(server: McpServer) {
                 const stylesPath = path.join(projectDir, "styles.js");
 
                 await fs.writeFile(stylesPath, stylesContent, "utf-8");
+                await updateContext(projectDir, { theme: style });
 
                 return {
                     content: [

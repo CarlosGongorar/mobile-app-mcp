@@ -3,6 +3,7 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { createScreenTemplate } from "../templates/createScreen.js";
+import { readContext, updateContext } from "../utils/context.js";
 
 // Convierte PascalCase a kebab-case para el nombre del archivo
 // e.g. "SignUp" -> "sign-up", "UserProfile" -> "user-profile"
@@ -96,6 +97,21 @@ export function registerCreateScreen(server: McpServer) {
                 await fs.writeFile(screenPath, createScreenTemplate(screenName), "utf-8");
 
                 const relativePath = path.relative(projectDir, screenPath);
+
+                const ctx = await readContext(projectDir);
+                if (ctx) {
+                    await updateContext(projectDir, {
+                        screens: [
+                            ...ctx.screens,
+                            {
+                                name: screenName,
+                                file: resolvedFileName,
+                                path: relativePath,
+                                layout: parent_layout ?? null,
+                            },
+                        ],
+                    });
+                }
 
                 return {
                     content: [{

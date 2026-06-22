@@ -6,6 +6,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { createScreenTemplate } from "../templates/createScreen.js";
 import { createLayoutTemplate } from "../templates/createLayout.js";
+import { updateContext } from "../utils/context.js";
 
 const execAsync = promisify(exec)
 
@@ -69,7 +70,12 @@ export function registerConfigureRouting(server: McpServer) {
                 let removeIndex = `rm -rf index.js`;
                 await execAsync(removeApp, { cwd: projectDir });
                 await execAsync(removeIndex, { cwd: projectDir });
-                
+
+                await updateContext(projectDir, {
+                    routingConfigured: true,
+                    screens: [{ name: "Main", file: "index.jsx", path: "app/index.jsx", layout: null }],
+                });
+
                 return {
                     content: [{
                         type: "text",

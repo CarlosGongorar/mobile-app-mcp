@@ -3,6 +3,7 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { buildUsageExample, COMPONENTS, VARIANTS } from "../templates/components.js";
+import { readContext, updateContext } from "../utils/context.js";
 
 export function registerCreateComponent(server: McpServer) {
     server.registerTool(
@@ -44,6 +45,13 @@ export function registerCreateComponent(server: McpServer) {
                 const filePath = path.join(componentsDir, fileName);
 
                 await fs.writeFile(filePath, COMPONENTS[component_type](), "utf-8");
+
+                const ctx = await readContext(projectDir);
+                if (ctx && !ctx.components.includes(componentName)) {
+                    await updateContext(projectDir, {
+                        components: [...ctx.components, componentName],
+                    });
+                }
 
                 return {
                     content: [{

@@ -11,6 +11,7 @@ import {
     storageHookTemplate,
     storageUsageInstructions,
 } from "../templates/storage.js";
+import { updateContext } from "../utils/context.js";
 
 const execAsync = promisify(exec);
 
@@ -108,7 +109,15 @@ PROVIDER RULES — read before calling:
                     "utf-8"
                 );
 
-                // 7. Write .env with supabase credentials for reference
+                // 7. Update project context
+                await updateContext(projectDir, {
+                    storage: {
+                        provider: provider as StorageProvider,
+                        configuredAt: new Date().toISOString(),
+                    },
+                });
+
+                // 8. Write .env with supabase credentials for reference
                 if (provider === "supabase" && supabase_url && supabase_publishable_key) {
                     const envPath = path.join(projectDir, ".env");
                     const envContent = [

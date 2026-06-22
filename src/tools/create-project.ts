@@ -5,6 +5,7 @@ import { promisify } from "util"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs/promises"
+import { writeContext } from "../utils/context.js"
 
 const execAsync = promisify(exec)
 
@@ -54,6 +55,18 @@ export function registerCreateProject(server: McpServer) {
                     path.join(projectDir, ".mcp-project.json"),
                     JSON.stringify(metadata)
                 );
+
+                await writeContext(projectDir, {
+                    name,
+                    createdAt: new Date().toISOString(),
+                    outputDir: baseDir,
+                    theme: null,
+                    routingConfigured: false,
+                    layouts: [],
+                    screens: [],
+                    components: [],
+                    storage: null,
+                });
 
                 return {
                     content: [

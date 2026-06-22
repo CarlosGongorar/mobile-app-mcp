@@ -7,12 +7,14 @@ import { registerCreateScreen } from "./create-screen.js";
 import { registerCreateLayout } from "./create-layout.js";
 import { registerConfigureStorage } from "./configure-storage.js";
 import { registerInitProject } from "./init-project.js";
+import { registerReadProject } from "./read-project.js";
 
 // Aca vamos a ir añadiendo las herramientas que queremos registrar
 export function registerTools(server: McpServer) {
     // Orquestador
     registerInitProject(server);
     // Herramientas
+    registerReadProject(server);
     registerCreateProject(server);
     registerSelectDesign(server);
     registerCreateComponent(server);
