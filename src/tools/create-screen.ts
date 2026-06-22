@@ -3,6 +3,8 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { createScreenTemplate } from "../templates/createScreen.js";
+import { readContext, updateContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 // Convierte PascalCase a kebab-case para el nombre del archivo
 // e.g. "SignUp" -> "sign-up", "UserProfile" -> "user-profile"
@@ -18,7 +20,7 @@ export function registerCreateScreen(server: McpServer) {
             inputSchema: CreateScreenSchema,
         },
         async ({ screenName, project_name, output_dir, parent_layout, file_name }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
             const appDir = path.join(projectDir, "app");
 
@@ -96,6 +98,21 @@ export function registerCreateScreen(server: McpServer) {
                 await fs.writeFile(screenPath, createScreenTemplate(screenName), "utf-8");
 
                 const relativePath = path.relative(projectDir, screenPath);
+
+                const ctx = await readContext(projectDir);
+                if (ctx) {
+                    await updateContext(projectDir, {
+                        screens: [
+                            ...ctx.screens,
+                            {
+                                name: screenName,
+                                file: resolvedFileName,
+                                path: relativePath,
+                                layout: parent_layout ?? null,
+                            },
+                        ],
+                    });
+                }
 
                 return {
                     content: [{

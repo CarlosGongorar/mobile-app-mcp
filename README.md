@@ -81,6 +81,24 @@ Agrega el servidor a tu archivo de configuración de Claude Desktop (`claude_des
 
 > Reemplaza `/ruta/absoluta/al/proyecto` con la ruta real donde clonaste el repositorio.
 
+Ademas si se quiere hacer uso de un BaaS es necesario usar el MCP server de Supabase.
+
+```json
+"supabase": {
+  "command": "npx",
+  "args": [
+    "-y",
+    "@supabase/mcp-server-supabase@latest"
+  ],
+  "env": {
+    "SUPABASE_ACCESS_TOKEN": "sbp_tu_token"
+  }
+}
+```
+> Reemplaza `sbp_tu_token` con un accessToken de tu cuenta.
+
+Se recomienda ir a https://supabase.com/docs/guides/ai-tools/mcp para ver la guia de configuración.
+
 ---
 
 ## Estructura del proyecto
@@ -146,7 +164,7 @@ La tool recibe la preferencia del usuario (base de datos en la nube o almacenami
  
 ```
 Opciones soportadas:
-  BaaS  →  Firebase / Supabase
+  BaaS  →  Supabase
   Local  →  AsyncStorage / SQLite (expo-sqlite)
 ```
  

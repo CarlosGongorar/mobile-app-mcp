@@ -4,6 +4,8 @@ import { exec } from "child_process"
 import { promisify } from "util"
 import path from "path"
 import fs from "fs/promises"
+import { writeContext } from "../utils/context.js"
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js"
 
 const execAsync = promisify(exec)
 
@@ -16,7 +18,7 @@ export function registerCreateProject(server: McpServer) {
         },
         // Implementación de la herramienta lo que se hace con la información de entrada
         async ({ name, output_dir }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, name);
 
             try {
@@ -49,6 +51,18 @@ export function registerCreateProject(server: McpServer) {
                     path.join(projectDir, ".mcp-project.json"),
                     JSON.stringify(metadata)
                 );
+
+                await writeContext(projectDir, {
+                    name,
+                    createdAt: new Date().toISOString(),
+                    outputDir: baseDir,
+                    theme: null,
+                    routingConfigured: false,
+                    layouts: [],
+                    screens: [],
+                    components: [],
+                    storage: null,
+                });
 
                 return {
                     content: [

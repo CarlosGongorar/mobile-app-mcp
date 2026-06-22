@@ -4,6 +4,8 @@ import path from "path";
 import fs from "fs/promises";
 import { createLayoutTemplate } from "../templates/createLayout.js";
 import { createScreenTemplate } from "../templates/createScreen.js";
+import { readContext, updateContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 export function registerCreateLayout(server: McpServer) {
     server.registerTool(
@@ -18,7 +20,7 @@ export function registerCreateLayout(server: McpServer) {
             inputSchema: CreateLayoutSchema,
         },
         async ({ layoutName, layoutType, project_name, output_dir, parent_layout }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
             const appDir = path.join(projectDir, "app");
 
@@ -93,6 +95,29 @@ export function registerCreateLayout(server: McpServer) {
                 await fs.writeFile(path.join(groupDir, "index.jsx"),createScreenTemplate(layoutName),"utf-8");
 
                 const relativeGroup = path.relative(projectDir, groupDir);
+
+                const ctx = await readContext(projectDir);
+                if (ctx) {
+                    await updateContext(projectDir, {
+                        layouts: [
+                            ...ctx.layouts,
+                            {
+                                name: layoutName,
+                                type: layoutType,
+                                path: relativeGroup,
+                            },
+                        ],
+                        screens: [
+                            ...ctx.screens,
+                            {
+                                name: layoutName,
+                                file: "index.jsx",
+                                path: `${relativeGroup}/index.jsx`,
+                                layout: layoutName.toLowerCase(),
+                            },
+                        ],
+                    });
+                }
 
                 return {
                     content: [{

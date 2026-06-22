@@ -3,6 +3,8 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { buildUsageExample, COMPONENTS, VARIANTS } from "../templates/components.js";
+import { readContext, updateContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 export function registerCreateComponent(server: McpServer) {
     server.registerTool(
@@ -12,7 +14,7 @@ export function registerCreateComponent(server: McpServer) {
             inputSchema: CreateComponentSchema,
         },
         async ({ component_type, project_name, output_dir }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
             const componentsDir = path.join(projectDir, "components");
 
@@ -44,6 +46,13 @@ export function registerCreateComponent(server: McpServer) {
                 const filePath = path.join(componentsDir, fileName);
 
                 await fs.writeFile(filePath, COMPONENTS[component_type](), "utf-8");
+
+                const ctx = await readContext(projectDir);
+                if (ctx && !ctx.components.includes(componentName)) {
+                    await updateContext(projectDir, {
+                        components: [...ctx.components, componentName],
+                    });
+                }
 
                 return {
                     content: [{

@@ -3,6 +3,8 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { THEMES, StyleKey } from "../templates/themes.js";
+import { updateContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 function generateStylesFile(style: StyleKey): string {
     const theme = THEMES[style];
@@ -27,7 +29,7 @@ export function registerSelectDesign(server: McpServer) {
             inputSchema: SelectDesignSchema,
         },
         async ({ style, project_name, output_dir }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
 
             try {
@@ -48,6 +50,7 @@ export function registerSelectDesign(server: McpServer) {
                 const stylesPath = path.join(projectDir, "styles.js");
 
                 await fs.writeFile(stylesPath, stylesContent, "utf-8");
+                await updateContext(projectDir, { theme: style });
 
                 return {
                     content: [
