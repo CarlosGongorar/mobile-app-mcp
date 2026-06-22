@@ -3,9 +3,9 @@ import z from "zod"
 import { exec } from "child_process"
 import { promisify } from "util"
 import path from "path"
-import { fileURLToPath } from "url"
 import fs from "fs/promises"
 import { writeContext } from "../utils/context.js"
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js"
 
 const execAsync = promisify(exec)
 
@@ -18,11 +18,7 @@ export function registerCreateProject(server: McpServer) {
         },
         // Implementación de la herramienta lo que se hace con la información de entrada
         async ({ name, output_dir }) => {
-            const __filename = fileURLToPath(import.meta.url);
-            const __dirname = path.dirname(__filename);
-
-            // Sube dos niveles: src/tools/ -> src/ -> raíz del proyecto
-            const baseDir = output_dir ?? path.join(__dirname, "../../projects");
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, name);
 
             try {

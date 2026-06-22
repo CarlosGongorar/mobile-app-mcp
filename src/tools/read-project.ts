@@ -3,6 +3,7 @@ import z from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { readContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 export function registerReadProject(server: McpServer) {
     server.registerTool(
@@ -15,7 +16,7 @@ export function registerReadProject(server: McpServer) {
             inputSchema: ReadProjectSchema,
         },
         async ({ project_name, output_dir }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
 
             try {

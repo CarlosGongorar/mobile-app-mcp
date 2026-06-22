@@ -12,6 +12,7 @@ import {
     storageUsageInstructions,
 } from "../templates/storage.js";
 import { updateContext } from "../utils/context.js";
+import { DEFAULT_PROJECTS_DIR } from "../utils/paths.js";
 
 const execAsync = promisify(exec);
 
@@ -44,7 +45,7 @@ PROVIDER RULES — read before calling:
             inputSchema: ConfigureStorageSchema,
         },
         async ({ provider, project_name, output_dir, supabase_url, supabase_publishable_key }) => {
-            const baseDir = output_dir ?? "./projects";
+            const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, project_name);
             const storageDir = path.join(projectDir, "storage");
             const hooksDir = path.join(projectDir, "hooks");
