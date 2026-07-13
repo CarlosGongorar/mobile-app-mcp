@@ -176,18 +176,18 @@ export function storageUsageInstructions(provider: StorageProvider): string {
     switch (provider) {
         case "supabase":
             return `Next steps:
-    1. Create a project at https://supabase.com
-    2. Fill in your URL and anon key in storage/config.ts
+    1. Your project URL and publishable key are already set in storage/config.js.
+    2. Create the tables you need in your Supabase dashboard.
     3. Use the hook in any screen:
         import { useSupabase } from "../hooks/useStorage";
-        const { data, loading, insert, remove } = useSupabase<MyType>("my_table");`;
+        const { data, loading, insert, remove } = useSupabase("my_table");`;
 
         case "asyncstorage":
             return `Next steps:
     1. No credentials needed — works out of the box.
     2. Use the hook in any screen:
         import { useAsyncStorage } from "../hooks/useStorage";
-        const { value, loading, save, clear } = useAsyncStorage<string>("user_token", "");`;
+        const { value, loading, save, clear } = useAsyncStorage("user_token", "");`;
 
         case "sqlite":
             return `Next steps:

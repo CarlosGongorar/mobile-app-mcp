@@ -48,6 +48,7 @@ export function registerReadProject(server: McpServer) {
                     `Theme:   ${ctx.theme ?? "not set"}`,
                     `Routing: ${ctx.routingConfigured ? "configured" : "not configured"}`,
                     `Storage: ${ctx.storage ? `${ctx.storage.provider} (set up on ${ctx.storage.configuredAt})` : "not configured"}`,
+                    `Auth:    ${ctx.auth ? "configured (Supabase email/password)" : "not configured"}`,
                     ``,
                     `Layouts (${ctx.layouts.length}):`,
                     ...(ctx.layouts.length > 0

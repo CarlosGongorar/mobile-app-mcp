@@ -62,6 +62,7 @@ export function registerCreateProject(server: McpServer) {
                     screens: [],
                     components: [],
                     storage: null,
+                    auth: false,
                 });
 
                 return {

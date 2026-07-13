@@ -6,6 +6,7 @@ import { registerConfigureRouting } from "./config-routing.js";
 import { registerCreateScreen } from "./create-screen.js";
 import { registerCreateLayout } from "./create-layout.js";
 import { registerConfigureStorage } from "./configure-storage.js";
+import { registerConfigureAuth } from "./configure-auth.js";
 import { registerInitProject } from "./init-project.js";
 import { registerReadProject } from "./read-project.js";
 
@@ -22,4 +23,5 @@ export function registerTools(server: McpServer) {
     registerCreateScreen(server);
     registerCreateLayout(server);
     registerConfigureStorage(server);
+    registerConfigureAuth(server);
 }
