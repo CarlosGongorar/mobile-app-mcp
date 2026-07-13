@@ -20,11 +20,17 @@ export function registerCreateProject(server: McpServer) {
         async ({ name, output_dir }) => {
             const baseDir = output_dir ?? DEFAULT_PROJECTS_DIR;
             const projectDir = path.join(baseDir, name);
+            const contextPath = path.join(projectDir, ".mcp-context.json");
+            const scaffoldMarker = path.join(projectDir, "package.json");
+
+            const fileExists = (p: string) => fs.access(p).then(() => true).catch(() => false);
 
             try {
-                // Verificar si el proyecto ya existe
-                const exists = await fs.access(projectDir).then(() => true).catch(() => false);
-                if (exists) {
+                // Un proyecto se considera "completo" solo si ya tiene su contexto.
+                // (Un cliente MCP puede cortar por timeout durante los pasos largos y
+                //  matar el handler; en ese caso el scaffold puede quedar en disco sin
+                //  contexto. Esta tool es reanudable: detecta ese estado y lo completa.)
+                if (await fileExists(contextPath)) {
                     return {
                         content: [
                             {
@@ -34,13 +40,21 @@ export function registerCreateProject(server: McpServer) {
                         ]
                     }
                 }
-                // Crear el proyecto
+
                 await fs.mkdir(projectDir, { recursive: true });
-                let command = `npx create-expo-app@latest ${name} --template blank`;
 
-                // Ejecutar el comando para crear el proyecto
-                const { stdout, stderr } = await execAsync(command, { cwd: baseDir, timeout: 120_000 });
+                // 1. Scaffold rápido SIN instalar dependencias (--no-install).
+                //    Se salta si ya hay un scaffold a medias de un intento previo
+                //    (create-expo-app rechazaría un directorio no vacío de todos modos).
+                const resumed = await fileExists(scaffoldMarker);
+                if (!resumed) {
+                    const scaffoldCommand = `npx create-expo-app@latest ${name} --template blank --no-install`;
+                    await execAsync(scaffoldCommand, { cwd: baseDir, timeout: 120_000 });
+                }
 
+                // 2. Escribir metadata + contexto ANTES del install pesado.
+                //    Como esto va justo tras un paso rápido (o instantáneo al reanudar),
+                //    el contexto queda persistido aunque el install posterior se corte.
                 const metadata = {
                     projectName: name,
                     createAt: new Date().toISOString(),
@@ -62,22 +76,26 @@ export function registerCreateProject(server: McpServer) {
                     screens: [],
                     components: [],
                     storage: null,
+                    auth: false,
                 });
+
+                // 3. Instalar dependencias como último paso (el más lento).
+                await execAsync(`npm install`, { cwd: projectDir, timeout: 120_000 });
 
                 return {
                     content: [
                         {
                             type: "text",
                             text: [
-                                ` Proyecto "${name}" creado exitosamente!`,
+                                resumed
+                                    ? ` Proyecto "${name}" completado (se reanudó un scaffold previo).`
+                                    : ` Proyecto "${name}" creado exitosamente!`,
                                 ` Ubicación: ${projectDir}`,
                                 ` Framework: Expo`,
                                 ``,
                                 `Próximos pasos:`,
                                 ` cd ${projectDir}`,
                                 ` npm start`,
-                                ``,
-                                stdout ? `📝 Output:\n${stdout}` : "",
                             ]
                                 .filter(Boolean)
                                 .join("\n")

@@ -29,6 +29,7 @@ export interface ProjectContext {
     screens: ScreenEntry[];
     components: string[];
     storage: StorageEntry | null;
+    auth: boolean;
 }
 
 const CONTEXT_FILE = ".mcp-context.json";
