@@ -88,29 +88,22 @@ PROVIDER RULES — read before calling:
                     }
                 }
 
-                // 3. Install dependencies
-                const deps = STORAGE_DEPS[provider as StorageProvider];
-                await execAsync(`npm install ${deps}`, {
-                    cwd: projectDir,
-                    timeout: 120_000,
-                });
-
-                // 4. Create folders
+                // 3. Create folders
                 await fs.mkdir(storageDir, { recursive: true });
                 await fs.mkdir(hooksDir, { recursive: true });
 
-                // 5. Write config file (injecting real credentials if supabase)
+                // 4. Write config file (injecting real credentials if supabase)
                 const config = storageConfigTemplate(provider as StorageProvider, supabase_url, supabase_publishable_key);
                 await fs.writeFile(path.join(storageDir, "config.js"), config, "utf-8");
 
-                // 6. Write hook
+                // 5. Write hook
                 await fs.writeFile(
                     path.join(hooksDir, "useStorage.js"),
                     storageHookTemplate(provider as StorageProvider),
                     "utf-8"
                 );
 
-                // 7. Update project context
+                // 6. Update project context
                 await updateContext(projectDir, {
                     storage: {
                         provider: provider as StorageProvider,
@@ -118,7 +111,7 @@ PROVIDER RULES — read before calling:
                     },
                 });
 
-                // 8. Write .env with supabase credentials for reference
+                // 7. Write .env with supabase credentials for reference
                 if (provider === "supabase" && supabase_url && supabase_publishable_key) {
                     const envPath = path.join(projectDir, ".env");
                     const envContent = [
@@ -138,6 +131,15 @@ PROVIDER RULES — read before calling:
                         }
                     }
                 }
+
+                // Install dependencies last (the slowest step). If the MCP client times
+                // out here, the generated files and context are already persisted; only
+                // the packages would need to be reinstalled.
+                const deps = STORAGE_DEPS[provider as StorageProvider];
+                await execAsync(`npm install ${deps}`, {
+                    cwd: projectDir,
+                    timeout: 120_000,
+                });
 
                 return {
                     content: [{

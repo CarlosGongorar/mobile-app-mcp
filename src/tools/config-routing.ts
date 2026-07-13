@@ -34,10 +34,6 @@ export function registerConfigureRouting(server: McpServer) {
                     };
                 }
 
-                // Instalar Dependencias
-                let command = `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`;
-                const { stdout, stderr } = await execAsync(command, { cwd: projectDir });
-
                 // Crear carpeta app
                 await fs.mkdir(appDir, { recursive: true });
 
@@ -76,6 +72,12 @@ export function registerConfigureRouting(server: McpServer) {
                     routingConfigured: true,
                     screens: [{ name: "Main", file: "index.jsx", path: "app/index.jsx", layout: null }],
                 });
+
+                // Instalar dependencias como último paso (el más lento).
+                // Si el cliente MCP corta por timeout aquí, los archivos y el contexto
+                // ya quedaron escritos; solo faltaría reinstalar los paquetes.
+                const installCommand = `npx expo install expo-router react-native-safe-area-context react-native-screens expo-linking expo-constants expo-status-bar`;
+                await execAsync(installCommand, { cwd: projectDir });
 
                 return {
                     content: [{

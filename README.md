@@ -99,6 +99,30 @@ Cada proyecto creado con este MCP contiene un archivo `.mcp-context.json` en su 
 
 Claude usa `read-project` para leer este estado antes de continuar trabajando, lo que permite retomar un proyecto en cualquier momento sin perder coherencia.
 
+### Persistencia ante timeouts
+
+Algunas herramientas ejecutan instalaciones de paquetes que pueden tardar más que el *timeout* del cliente MCP. Cuando el cliente corta la petición **mata el handler**: cualquier código que iba después del paso largo no se ejecuta. Las herramientas están diseñadas para que esto no deje el proyecto en un estado irrecuperable.
+
+**Patrón general — escribir primero, instalar de último** (`config-routing`, `configure-storage`):
+
+1. Se generan los archivos (screens, layouts, config, etc.) y se actualiza `.mcp-context.json`.
+2. La instalación de paquetes (`npm install` / `npx expo install`) se ejecuta como **último** paso.
+
+Así, si el cliente corta durante la instalación, los archivos y el contexto ya quedaron en disco; solo faltaría reinstalar los paquetes:
+
+```bash
+cd projects/<tu-proyecto>
+npm install        # o: npx expo install
+```
+
+**`create-project` es reanudable.** Aquí el paso largo es el propio scaffold de Expo, que ocurre *antes* de poder escribir el contexto, así que "instalar de último" no basta. En su lugar:
+
+1. Genera el scaffold con `create-expo-app --template blank --no-install` (rápido, sin instalar).
+2. Escribe metadata + `.mcp-context.json`.
+3. Instala dependencias (`npm install`) como último paso.
+
+Si el cliente corta durante el scaffold o el install, el proyecto queda a medias (sin `.mcp-context.json`). **Basta con volver a llamar `create-project` con el mismo nombre**: detecta el scaffold existente, se salta `create-expo-app` y completa lo que falte (contexto + instalación). Un proyecto solo se considera "ya existente" cuando tiene su `.mcp-context.json`.
+
 ---
 
 ## Instalación
